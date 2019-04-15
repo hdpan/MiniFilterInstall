@@ -150,6 +150,9 @@ BOOL DeleteDriver(LPCWSTR DriverName)
     CloseServiceHandle(hService);
     CloseServiceHandle(hSCManager);
 
+
+
+
     return Status;
 }
 

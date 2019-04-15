@@ -71,6 +71,7 @@ BEGIN_MESSAGE_MAP(CInsMiniDrvDlg, CDialogEx)
 	ON_WM_QUERYDRAGICON()
 	ON_BN_CLICKED(IDC_BUTTON_INSTALL, &CInsMiniDrvDlg::OnBnClickedButtonInstall)
 	ON_BN_CLICKED(IDC_BUTTON_DEL, &CInsMiniDrvDlg::OnBnClickedButtonDel)
+	ON_WM_DROPFILES()
 END_MESSAGE_MAP()
 
 
@@ -191,14 +192,25 @@ void CInsMiniDrvDlg::OnBnClickedButtonInstall()
 
 	auto [name,ext] = TXF::utility::GetFileNameExt(TXF::utility::WstringToString(Path));
 
+	CString extName (ext.c_str());
+
+	if (extName.CompareNoCase(L".sys"))
+	{
+		AfxMessageBox(_T("请选择.sys驱动文件"));
+
+		return;
+	}
+
 	DriverName = name.c_str();
 
 	BOOL bRet = InstallMinifilter(strPath, DriverName,L"360123");
 
 	if (bRet == FALSE)
 	{
-		TCHAR* buffer;
+		TCHAR* buffer = nullptr;
+
 		DWORD error = ERROR_DS_OBJ_STRING_NAME_EXISTS;
+
 		::FormatMessage(
 			FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
 			NULL,
@@ -207,7 +219,9 @@ void CInsMiniDrvDlg::OnBnClickedButtonInstall()
 			(LPTSTR)&buffer,
 			0,
 			NULL);
+
 		::MessageBox(NULL, buffer, NULL, 0);
+
 		LocalFree(buffer);
 
 		AfxMessageBox(buffer);
@@ -222,4 +236,23 @@ void CInsMiniDrvDlg::OnBnClickedButtonDel()
 		DeleteDriver(DriverName);
 	}
 	
+}
+
+
+void CInsMiniDrvDlg::OnDropFiles(HDROP hDropInfo)
+{
+	int DropCount = DragQueryFile(hDropInfo, -1, NULL, 0);//取得被拖动文件的数目
+
+	for (int i = 0; i < DropCount; i++)
+	{
+		WCHAR wcStr[MAX_PATH];
+
+		DragQueryFile(hDropInfo, i, wcStr, MAX_PATH);//获得拖曳的第i个文件的文件名
+
+		m_editPath.SetWindowText(wcStr);
+	}
+
+	DragFinish(hDropInfo);  //拖放结束后,释放内存
+
+	CDialogEx::OnDropFiles(hDropInfo);
 }

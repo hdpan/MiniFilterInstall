@@ -37,4 +37,6 @@ public:
 	afx_msg void OnBnClickedButtonDel();
 private:
 	CMFCEditBrowseCtrl m_editPath;
+public:
+	afx_msg void OnDropFiles(HDROP hDropInfo);
 };
